@@ -1,6 +1,8 @@
 substitutions:
   _GCP_REGION: australia-southeast1
   _FOUNDATIONS_PREFIX:
+  _SECRETS_KEYRING:
+  _SECRETS_KEY:
   _TF_DOMAIN: gcp.mafro.dev
 
 tags:
@@ -13,11 +15,20 @@ steps:
   dir: foundation
   args: ['build', '-f', 'Dockerfile.terraform', '-t', 'asia.gcr.io/${PROJECT_ID}/terraform:0.11.4', '.']
 
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: sh
+  args:
+    - '-c'
+    - |
+      gsutil cp gs://workstation-9182e22d42-secrets/tf.json.enc tf.json.enc
+      gcloud kms decrypt --location=${_GCP_REGION} --keyring=${_SECRETS_KEYRING} --key=${_SECRETS_KEY} --ciphertext-file=tf.json.enc --plaintext-file=tf.json
+
 - name: asia.gcr.io/${PROJECT_ID}/terraform:0.11.4
   dir: foundation
   entrypoint: make
   env:
     - FOUNDATIONS_PREFIX=${_FOUNDATIONS_PREFIX}
+    - GOOGLE_APPLICATION_CREDENTIALS=tf.json
 
 images:
   - asia.gcr.io/${PROJECT_ID}/terraform:0.11.4
