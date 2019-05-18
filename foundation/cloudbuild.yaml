@@ -1,0 +1,23 @@
+substitutions:
+  _GCP_REGION: australia-southeast1
+  _FOUNDATIONS_PREFIX:
+  _TF_DOMAIN: gcp.mafro.dev
+
+tags:
+  - foundation
+
+steps:
+
+# build worker image containing gcloud, kubectl, docker, make, helm, kustomize
+- name: gcr.io/cloud-builders/docker
+  dir: foundation
+  args: ['build', '-f', 'Dockerfile.terraform', '-t', 'asia.gcr.io/${PROJECT_ID}/terraform:0.11.4', '.']
+
+- name: asia.gcr.io/${PROJECT_ID}/terraform:0.11.4
+  dir: foundation
+  entrypoint: make
+  env:
+    - FOUNDATIONS_PREFIX=${_FOUNDATIONS_PREFIX}
+
+images:
+  - asia.gcr.io/${PROJECT_ID}/terraform:0.11.4
