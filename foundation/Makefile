@@ -1,5 +1,6 @@
 .PHONY: all test
 
+GCP_REGION=australia-southeast1
 ORG_ID?=412577173587
 ORG?=gcp.mafro.dev
 FOUNDATIONS_PREFIX?=foundations
@@ -33,3 +34,12 @@ write-sa-key:
 .PHONY: clean
 clean:
 	terraform destroy -var-file=$(ORG).tfvars -var my_ip=1.0.0.1 -force
+
+.PHONY: encrypt-secret-filepath
+encrypt-secret-filepath:
+	@gcloud --project "$(GCP_PROJECT_ID)" kms encrypt \
+		--plaintext-file="$(SECRET_FILEPATH)" \
+		--ciphertext-file=- \
+		--location=$(GCP_REGION) \
+		--keyring=$(GCP_SECRETS_KEYRING) \
+		--key=$(GCP_SECRETS_KEYNAME) | base64 -w 0 && echo
