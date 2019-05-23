@@ -1,0 +1,26 @@
+substitutions:
+  _GCP_REGION: australia-southeast1
+  _KUSTOMIZE_OVERLAY:
+
+tags:
+  - workstation
+
+steps:
+
+# build worker image containing gcloud, kubectl, docker, make, helm, kustomize
+- name: gcr.io/cloud-builders/docker
+  dir: workstation
+  args: ['build', '-f', 'Dockerfile.cloudbuild', '-t', 'asia.gcr.io/${PROJECT_ID}/cloudbuilder:latest', '.']
+
+# build twistcli docker image
+- name: asia.gcr.io/${PROJECT_ID}/cloudbuilder:latest
+  dir: workstation
+  entrypoint: make
+  args: ['build-twistcli']
+  env:
+    - TWISTLOCK_RELEASE_VERSION=${_TWISTLOCK_RELEASE_VERSION}
+    - TWISTLOCK_RELEASE_URL_HASH=${_TWISTLOCK_RELEASE_URL_HASH}
+    - TWISTLOCK_RELEASE_SHA256=${_TWISTLOCK_RELEASE_SHA256}
+
+images:
+  - asia.gcr.io/${PROJECT_ID}/cloudbuilder:latest

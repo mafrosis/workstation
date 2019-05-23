@@ -43,6 +43,7 @@ resource "google_kms_crypto_key_iam_member" "workstation-decrypt" {
 output "keyring_name" {
   value = "${google_kms_key_ring.workstation-keyring.name}"
 }
+
 output "key_name" {
   value = "${google_kms_crypto_key.workstation.name}"
 }

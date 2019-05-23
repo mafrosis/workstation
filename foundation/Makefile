@@ -43,3 +43,13 @@ encrypt-secret-filepath:
 		--location=$(GCP_REGION) \
 		--keyring=$(GCP_SECRETS_KEYRING) \
 		--key=$(GCP_SECRETS_KEYNAME) | base64 -w 0 && echo
+
+.PHONY: decrypt-secret
+decrypt-secret:
+	@base64 --decode - | \
+	gcloud --project "$(GCP_PROJECT_ID)" kms decrypt \
+		--ciphertext-file=- \
+		--plaintext-file=- \
+		--location=$(GCP_REGION) \
+		--keyring=$(GCP_SECRETS_KEYRING) \
+		--key=$(GCP_SECRETS_KEYNAME)

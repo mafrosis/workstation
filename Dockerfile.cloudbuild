@@ -1,0 +1,68 @@
+FROM gcr.io/cloud-builders/gcloud-slim
+
+# https://github.com/GoogleCloudPlatform/cloud-builders/blob/master/gcloud/Dockerfile
+RUN apt-get -y update && \
+	/builder/google-cloud-sdk/bin/gcloud -q components install \
+		alpha beta kubectl && \
+	/builder/google-cloud-sdk/bin/gcloud -q components update && \
+	/builder/google-cloud-sdk/bin/gcloud components list && \
+	rm -rf /var/lib/apt/lists/*
+
+# https://github.com/GoogleCloudPlatform/cloud-builders/blob/master/docker/Dockerfile-18.09.0
+RUN apt-get update && \
+	apt-get -y install \
+		apt-transport-https \
+		ca-certificates \
+		curl \
+		make \
+		software-properties-common \
+		unzip && \
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+	apt-key fingerprint 0EBFCD88 && \
+	add-apt-repository \
+	   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+	   xenial \
+	   edge" && \
+	apt-get -y update && \
+	apt-get -y install docker-ce=5:18.09.0~3-0~ubuntu-xenial && \
+	apt-get --purge -y autoremove && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
+
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/blob/master/helm/Dockerfile
+ARG HELM_VERSION=v2.12.2
+
+RUN mkdir -p /builder/helm && \
+	curl -SL https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz -o helm.tar.gz && \
+	tar zxvf helm.tar.gz --strip-components=1 -C /builder/helm linux-amd64/helm linux-amd64/tiller && \
+	rm helm.tar.gz
+
+ENV PATH=/builder/helm/:$PATH
+
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/blob/master/kustomize/Dockerfile
+ARG KUSTOMIZE_VERSION=1.0.11
+
+RUN apt-get update && \
+	mkdir /builder/kustomize && \
+	curl -SL https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 -o /builder/kustomize/kustomize && \
+	chmod +x /builder/kustomize/kustomize && \
+	apt-get --purge -y autoremove && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
+
+ENV PATH=/builder/kustomize:$PATH
+
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/blob/master/kustomize/Dockerfile
+ARG TERRAFORM_VERSION=0.11.14
+ARG TERRAFORM_VERSION_SHA256SUM=9b9a4492738c69077b079e595f5b2a9ef1bc4e8fb5596610f69a6f322a8af8dd
+
+RUN mkdir /builder/terraform && \
+	curl -o terraform_linux_amd64.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip && \
+	echo "${TERRAFORM_VERSION_SHA256SUM} terraform_linux_amd64.zip" > terraform_SHA256SUMS && \
+	sha256sum -c terraform_SHA256SUMS --status && \
+	unzip terraform_linux_amd64.zip -d /builder/terraform && \
+	rm -f terraform_linux_amd64.zip
+
+ENV PATH=/builder/terraform:$PATH
+
+ENTRYPOINT []
